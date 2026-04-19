@@ -1,0 +1,19 @@
+[Unit]
+Description=Incus Container Hypervisor
+Documentation=http://linuxcontainers.org
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/incusd daemon
+ExecStop=/usr/bin/incusd shutdown
+ExecReload=/bin/kill -s HUP $MAINPID
+LimitNOFILE=infinity
+LimitNPROC=infinity
+LimitCORE=infinity
+TimeoutStartSec=0
+Delegate=yes
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target

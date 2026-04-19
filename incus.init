@@ -1,0 +1,120 @@
+#!/bin/sh
+#
+# Container hypervisor and a new user experience for LXC
+#
+# chkconfig:	345 20 80
+#
+# processname:	incus
+# pidfile: /var/run/incus.pid
+#
+
+# Source function library
+. /etc/rc.d/init.d/functions
+
+# Get network config
+. /etc/sysconfig/network
+
+# Check that networking is up.
+if is_yes "${NETWORKING}"; then
+	if [ ! -f /var/lock/subsys/network -a "$1" != stop -a "$1" != status ]; then
+		msg_network_down "incus"
+		exit 1
+	fi
+else
+	exit 0
+fi
+
+# Get service config - may override defaults
+[ -f /etc/sysconfig/incus ] && . /etc/sysconfig/incus
+OPTIONS="$OPTIONS --group incus --logfile /var/log/incus/incus.log"
+
+pidfile="/var/run/incus.pid"
+
+start() {
+	if status --pidfile $pidfile incus incus >/dev/null; then
+		msg_already_running "incus"
+		RETVAL=1
+		return
+	fi
+                
+	msg_starting "incus"
+	daemon --fork --waitforname incus /usr/lib/incus-wrapper daemon $OPTIONS 
+	
+	# incus does not write pidfile, so create one
+	show "Checking incus daemon status"
+	busy
+	
+	if incus waitready --timeout=16 2>/dev/null; then
+	    pid=$(lxc info 2>/dev/null | awk '/server_pid:/{print $2}')
+   	    [ -n "$pid" ] && echo $pid > $pidfile
+	fi 
+
+	if [ -n "$pid" ]; then
+		touch /var/lock/subsys/incus
+		ok
+		RETVAL=0
+	else
+		fail
+		RETVAL=1
+	fi
+}
+
+stop() {
+	if [ ! -f /var/lock/subsys/incus ]; then
+		msg_not_running "incus"
+		return
+	fi
+
+	# Stop daemons.
+	msg_stopping "incus"
+	/usr/sbin/incus shutdown 
+	busy
+	sleep 1
+	if status --pidfile $pidfile incus incus >/dev/null; then
+		killproc --pidfile $pidfile incus
+	else
+		ok
+	fi
+	rm -f /var/lock/subsys/incus
+}
+
+condrestart() {
+	if [ ! -f /var/lock/subsys/incus ]; then
+		msg_not_running "incus"
+		RETVAL=$1
+		return
+	fi
+
+	stop
+	start
+}
+
+RETVAL=0
+# See how we were called.
+case "$1" in
+  start)
+	start
+	;;
+  stop)
+	stop
+	;;
+  restart)
+	stop
+	start
+	;;
+  try-restart)
+	condrestart 0
+	;;
+  force-reload)
+	condrestart 7
+	;;
+  status)
+	status --pidfile $pidfile incus incus
+	RETVAL=$?
+	;;
+  *)
+	msg_usage "$0 {start|stop|restart|try-restart|force-reload|status}"
+	exit 3
+esac
+
+exit $RETVAL
