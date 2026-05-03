@@ -46,8 +46,8 @@ ExclusiveArch:	%{ix86} %{x8664} %{arm}
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %define		_enable_debug_packages 0
-%define		gobuild(o:) go build -ldflags "${LDFLAGS:-} -B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n')" -a -v -x %{?**};
-%define		goinstall go install -ldflags "${LDFLAGS:-} -B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n')" -a -v
+%define		gobuild(o:tags:) go build -ldflags "${GO_LDFLAGS:-} -B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n')" -a -v -x %{?**};
+%define		goinstall go install -ldflags "${GO_LDFLAGS:-} -B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n')" -a -v
 %define		gopath		%{_libdir}/golang
 %define		import_path	github.com/lxc/incus
 %define		_libexecdir	%{_prefix}/lib
@@ -93,15 +93,15 @@ export GOPATH=$(pwd)/_dist
 export GOBIN=$GOPATH/bin
 # flags from ArchLinux package
 export CGO_LDFLAGS_ALLOW="-Wl,-z,now"
-export GO_LDFLAGS="-compressdwarf=false -linkmode external"
 
 # linux agents
-CGO_ENABLED=0 go build -o bin/ -tags=agent,netgo ./cmd/incus-agent/...
+CGO_ENABLED=0 GO_LDFLAGS= %gobuild -o bin/ -tags=agent,netgo ./cmd/incus-agent/...
 
+export GO_LDFLAGS="-compressdwarf=false -linkmode external"
 export GOFLAGS="-buildmode=pie -modcacherw"
-go build -v -ldflags "${GO_LDFLAGS}" -tags "netgo" -o bin/ ./cmd/incus-migrate/...
+%gobuild -tags "netgo" -o bin/ ./cmd/incus-migrate/...
 for tool in fuidshift incus lxc-to-incus lxd-to-incus incusd incus-benchmark incus-simplestreams incus-user; do
-  go build -v -ldflags "${GO_LDFLAGS}" -tags "libsqlite3" -o bin/ ./cmd/$tool
+  %gobuild -tags "libsqlite3" -o bin/ ./cmd/$tool
 done
 
 %install
