@@ -1,12 +1,12 @@
 # TODO: proper gid, uid, etc.
 Summary:	Fast, dense and secure container and virtual machine management
 Name:		incus
-Version:	6.23.0
+Version:	7.0.0
 Release:	0.1
 License:	Apache v2.0
 Group:		Applications/System
 Source0:	https://github.com/lxc/incus/archive/v%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	d6a9b4c19347272013dc6892064d699a
+# Source0-md5:	4f080d5ab0bd4c8022dbb796f97f31ff
 Source1:	%{name}.service
 Source2:	%{name}.init
 Source3:	%{name}.sysconfig
