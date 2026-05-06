@@ -20,9 +20,9 @@ BuildRequires:	criu-devel >= 1.7
 BuildRequires:	golang >= 1.23
 BuildRequires:	libco-devel
 BuildRequires:	libuv-devel
-BuildRequires:	lxc-devel >= 3.0
+BuildRequires:	lxc-devel >= 6.0
 BuildRequires:	pkgconfig
-BuildRequires:	raft-devel >= 0.14.0
+BuildRequires:	raft-devel >= 0.22.1
 BuildRequires:	rpmbuild(macros) >= 1.228
 BuildRequires:	udev-devel
 Requires(post,preun):	/sbin/chkconfig
@@ -32,6 +32,7 @@ Requires(pre):	/usr/sbin/groupadd
 Requires:	dnsmasq
 Requires:	iproute2
 Requires:	libcgroup
+Requires:	lxc >= 6.0
 Requires:	rc-scripts >= 0.4.0.10
 Requires:	rsync
 Requires:	squashfs
